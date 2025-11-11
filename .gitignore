@@ -52,7 +52,7 @@ dist/
 
 # Remix
 public/build/
-*.ts
+
 
 # Temporary folders for code generation
 .temp/
