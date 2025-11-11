@@ -4,6 +4,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
 import { HttpModule } from "@nestjs/axios";
 import { PushNotificationModule } from "./push-notification/push-notification.module";
 import { HealthController } from "./health/health.controller";
+import { CircuitBreakerService } from "./push-notification/circuit-breaker.service";
 
 @Module({
   imports: [
@@ -38,5 +39,6 @@ import { HealthController } from "./health/health.controller";
     PushNotificationModule,
   ],
   controllers: [HealthController],
+  providers: [CircuitBreakerService],
 })
 export class AppModule {}
