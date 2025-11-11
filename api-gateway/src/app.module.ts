@@ -4,12 +4,14 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RedisCacheModule } from './redis/redis-cache.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    RedisCacheModule,
     ClientsModule.register([
       {
         name: 'RABBITMQ_SERVICE',
