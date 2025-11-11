@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { CorrelationIdMiddleware } from './middleware/correlation-id.middleware';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,12 +11,18 @@ async function bootstrap() {
   // Enable CORS
   app.enableCors();
 
+  // Use correlation ID middleware
+  app.use(CorrelationIdMiddleware);
+
   // Use validation pipe
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     forbidNonWhitelisted: true,
     transform: true,
   }));
+
+  // Use logging interceptor
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Setup Swagger
   const config = new DocumentBuilder()
