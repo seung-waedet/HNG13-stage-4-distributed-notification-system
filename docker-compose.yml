@@ -1,0 +1,128 @@
+version: '3.9'
+
+services:
+  # -------------------------
+  # API Gateway
+  # -------------------------
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rabbitmq
+      - user-service
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      # fallback values for local dev if .env is missing
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      USER_DB_HOST: ${USER_DB_HOST:-postgres}
+      USER_DB_PORT: ${USER_DB_PORT:-5432}
+      USER_DB_NAME: ${USER_DB_NAME:-users_db}
+      USER_DB_USER: ${USER_DB_USER:-admin}
+      USER_DB_PASS: ${USER_DB_PASS:-admin}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+
+  # -------------------------
+  # User Service
+  # -------------------------
+  user-service:
+    build: ./user-service
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./user-service/.env
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-users_db}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASS: ${DB_PASS:-admin}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+    depends_on:
+      - postgres
+      - redis
+
+  # -------------------------
+  # Email Service
+  # -------------------------
+  email-service:
+    build: ./email-service
+    env_file:
+      - ./email-service/.env
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+    depends_on:
+      - rabbitmq
+
+  # -------------------------
+  # Push Service
+  # -------------------------
+  push-service:
+    build: ./push-service
+    env_file:
+      - ./push-service/.env
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+    depends_on:
+      - rabbitmq
+
+  # -------------------------
+  # Template Service
+  # -------------------------
+  template-service:
+    build: ./template-service
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./template-service/.env
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-template_service_db}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASS: ${DB_PASS:-admin}
+    depends_on:
+      - postgres
+
+  # -------------------------
+  # RabbitMQ
+  # -------------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  # -------------------------
+  # PostgreSQL
+  # -------------------------
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: users_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # -------------------------
+  # Redis
+  # -------------------------
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+# -------------------------
+# Volumes
+# -------------------------
+volumes:
+  pgdata:
