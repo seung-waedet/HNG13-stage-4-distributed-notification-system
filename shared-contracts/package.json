@@ -1,0 +1,16 @@
+{
+  "name": "@notification-system/shared-contracts",
+  "version": "1.0.0",
+  "description": "Shared contracts for notification system services",
+  "main": "index.js",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": ["notification", "shared", "contracts", "types"],
+  "author": "Notification System Team",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^4.9.0"
+  }
+}
