@@ -16,7 +16,11 @@ def get_template(code: str):
     template = templates.get(code)
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
-    return {"code": code, "template": template}
+    return {
+        "success": True, 
+        "data": template, 
+        "message": "Template fetched successfully"
+    }
 
 
 @app.get("/")
@@ -32,3 +36,8 @@ def health_check():
     Health check endpoint — for CI/CD, monitoring, or orchestration tools.
     """
     return {"status": "ok", "service": "template-service"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)
