@@ -1,14 +1,20 @@
 {
   "welcome_email": {
     "subject": "Welcome to Our Platform!",
-    "body": "Hi {{name}},\n\nThanks for signing up. We’re glad to have you onboard!"
+    "body": "Hi {{name}},\n\nThanks for signing up. We’re glad to have you onboard!",
+    "version": "2.0.0",
+    "variables": ["name"]
   },
   "password_reset": {
     "subject": "Reset Your Password",
-    "body": "Hi {{name}},\n\nClick here to reset your password: {{reset_link}}"
+    "body": "Hi {{name}},\n\nClick here to reset your password: {{link}}",
+    "version": "1.5.4",
+    "variables": ["name", "link"]
   },
   "account_deactivated": {
     "subject": "Your Account Has Been Deactivated",
-    "body": "Hi {{name}},\n\nWe noticed you deactivated your account. We hope to see you back soon."
+    "body": "Hi {{name}},\n\nWe noticed you deactivated your account. We hope to see you back soon.",
+    "version": "1.0.0",
+    "variables": ["name"]
   }
 }
