@@ -16,7 +16,7 @@ export class UserService {
 
     if (!baseUrl) {
       this.logger.warn(
-        "USER_SERVICE_URL is not set. Using mock user for development.",
+        "USER_SERVICE_URL is not set. Using mock user for development",
       );
       return {
         id: userId,
