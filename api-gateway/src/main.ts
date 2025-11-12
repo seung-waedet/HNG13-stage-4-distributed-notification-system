@@ -1,18 +1,34 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { CorrelationIdMiddleware } from './middleware/correlation-id.middleware';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { Request, Response, NextFunction } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { setupRabbitMQ } from './rabbitmq/rabbitmq.config';
+
+const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
+  // Setup RabbitMQ exchange and queues
+  try {
+    await setupRabbitMQ();
+  } catch (error) {
+    logger.warn('⚠️ RabbitMQ setup failed, continuing anyway...');
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
   app.enableCors();
 
-  // Use correlation ID middleware
-  app.use(CorrelationIdMiddleware);
+  // Use correlation ID middleware (as a function)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    const correlationId = req.headers['x-correlation-id'] as string || uuidv4();
+    req.headers['x-correlation-id'] = correlationId;
+    res.setHeader('X-Correlation-Id', correlationId);
+    next();
+  });
 
   // Use validation pipe
   app.useGlobalPipes(new ValidationPipe({
@@ -35,6 +51,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT || 3000);
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  logger.log(`🚀 API Gateway running on port ${port}`);
+  logger.log(`📚 Swagger docs available at http://localhost:${port}/api`);
 }
 bootstrap();

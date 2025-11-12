@@ -1,16 +1,27 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { NotificationRequestDto } from './dto/create-notification.dto';
 import { ApiResponse } from '../../../shared-contracts/types/response.types';
+import { RabbitMQPublisherService } from '../rabbitmq/publisher.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(@Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy) {}
+  private readonly logger = new Logger(NotificationsService.name);
+
+  constructor(
+    @Inject('RABBITMQ_SERVICE') private readonly client: ClientProxy,
+    private readonly publisher: RabbitMQPublisherService,
+  ) {
+    // ClientProxy will connect automatically when first used
+    this.logger.log('📡 NotificationsService initialized with RabbitMQ client');
+  }
 
   async processNotification(dto: NotificationRequestDto): Promise<ApiResponse> {
+    this.logger.log(`📨 Received notification request: ${JSON.stringify(dto)}`);
+    
     try {
-      // Prepare message for RabbitMQ
-      const message = {
+      // Prepare message data
+      const messageData = {
         notification_id: dto.request_id,
         user_id: dto.user_id,
         notification_type: dto.notification_type,
@@ -23,11 +34,16 @@ export class NotificationsService {
         metadata: dto.metadata || {},
       };
 
-      // Determine exchange routing key based on notification type
-      const routingKey = dto.notification_type; // 'email' or 'push'
+      // Pattern based on notification type
+      const pattern = dto.notification_type; // 'email' or 'push'
+      
+      this.logger.log(`🚀 Publishing message with routing key: "${pattern}"`);
+      this.logger.log(`📦 Message Data: ${JSON.stringify(messageData)}`);
 
-      // Publish to RabbitMQ
-      await this.client.emit(routingKey, message).toPromise();
+      // Publish directly to the configured direct exchange to ensure delivery
+      await this.publisher.publish(pattern, messageData);
+      
+      this.logger.log(`✅ Message published to exchange "notifications.direct" with key "${pattern}"`);
 
       return {
         success: true,
@@ -35,6 +51,7 @@ export class NotificationsService {
         message: 'Notification queued successfully',
       };
     } catch (error) {
+      this.logger.error(`❌ Failed to process notification: ${error.message}`, error.stack);
       return {
         success: false,
         error: error.message,

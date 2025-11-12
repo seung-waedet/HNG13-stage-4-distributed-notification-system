@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.0",
+    "@nestjs/cache-manager": "^3.0.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.0",
@@ -29,6 +30,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.0.0",
     "@nestjs/terminus": "^10.0.0",
+    "@nestjs/throttler": "^6.4.0",
     "amqp-connection-manager": "^5.0.0",
     "amqplib": "^0.10.9",
     "cache-manager": "^7.2.4",
@@ -39,7 +41,8 @@
     "reflect-metadata": "^0.2.0",
     "rimraf": "^6.0.0",
     "rxjs": "^7.8.0",
-    "swagger-ui-express": "^4.6.0"
+    "swagger-ui-express": "^4.6.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
