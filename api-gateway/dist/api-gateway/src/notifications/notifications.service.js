@@ -22,10 +22,10 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         this.client = client;
         this.publisher = publisher;
         this.logger = new common_1.Logger(NotificationsService_1.name);
-        this.logger.log('📡 NotificationsService initialized with RabbitMQ client');
+        this.logger.log('NotificationsService initialized with RabbitMQ client');
     }
     async processNotification(dto) {
-        this.logger.log(`📨 Received notification request: ${JSON.stringify(dto)}`);
+        this.logger.log(`Received notification request: ${JSON.stringify(dto)}`);
         try {
             const messageData = {
                 notification_id: dto.request_id,
@@ -40,10 +40,10 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
                 metadata: dto.metadata || {},
             };
             const pattern = dto.notification_type;
-            this.logger.log(`🚀 Publishing message with routing key: "${pattern}"`);
-            this.logger.log(`📦 Message Data: ${JSON.stringify(messageData)}`);
+            this.logger.log(`Publishing message with routing key: "${pattern}"`);
+            this.logger.log(`Message Data: ${JSON.stringify(messageData)}`);
             await this.publisher.publish(pattern, messageData);
-            this.logger.log(`✅ Message published to exchange "notifications.direct" with key "${pattern}"`);
+            this.logger.log(`Message published to exchange "notifications.direct" with key "${pattern}"`);
             return {
                 success: true,
                 data: { notification_id: dto.request_id, status: 'queued' },
