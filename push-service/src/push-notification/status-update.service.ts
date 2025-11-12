@@ -1,11 +1,9 @@
-import { Injectable, Inject } from "@nestjs/common";
-import { ClientProxy } from "@nestjs/microservices";
+import { Injectable } from "@nestjs/common";
+import { StatusPublisherService } from "./status-publisher.service";
 
 @Injectable()
 export class StatusUpdateService {
-  constructor(
-    @Inject("RABBITMQ_SERVICE") private readonly client: ClientProxy,
-  ) {}
+  constructor(private readonly statusPublisher: StatusPublisherService) {}
 
   async updateStatus(payload: {
     notification_id: string;
@@ -14,9 +12,7 @@ export class StatusUpdateService {
     error?: string;
   }) {
     try {
-      // Emit status update to the notification status queue using direct exchange
-      // We'll send to the exchange with a routing key for status updates
-      await this.client.emit("notification_status", payload).toPromise();
+      await this.statusPublisher.publishStatus(payload);
     } catch (error) {
       console.error("Failed to update notification status:", error);
     }

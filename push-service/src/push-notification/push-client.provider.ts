@@ -7,47 +7,49 @@ export class PushClientProvider {
   private fcm: any;
 
   constructor() {
-    // Initialize Firebase Admin SDK for FCM
     try {
       const admin = require("firebase-admin");
 
-      if (admin.apps.length === 0) {
-        // Check if we have service account credentials
-        if (process.env.FIREBASE_CREDENTIALS_PATH) {
-          // Initialize with service account file
-          admin.initializeApp({
-            credential: admin.credential.cert(
-              process.env.FIREBASE_CREDENTIALS_PATH,
-            ),
-          });
-        } else if (
-          process.env.FIREBASE_PROJECT_ID &&
-          process.env.FIREBASE_CLIENT_EMAIL &&
-          process.env.FIREBASE_PRIVATE_KEY
-        ) {
-          // Initialize with service account credentials from environment variables
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId: process.env.FIREBASE_PROJECT_ID,
-              clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-              privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(
-                /\\n/g,
-                "\n",
-              ),
-            }),
-          });
-        } else {
-          // Initialize with default credentials (for Google Cloud deployment)
-          admin.initializeApp();
-        }
+      if (admin.apps.length > 0) {
+        this.fcm = admin;
+        this.fcmInitialized = true;
+        this.logger.log("Firebase Admin SDK already initialized.");
+        return;
+      }
+
+      if (process.env.FIREBASE_CREDENTIALS_PATH) {
+        admin.initializeApp({
+          credential: admin.credential.cert(process.env.FIREBASE_CREDENTIALS_PATH),
+        });
+        this.logger.log("Firebase initialized with credentials file.");
+      } else if (
+        process.env.FIREBASE_PROJECT_ID &&
+        process.env.FIREBASE_CLIENT_EMAIL &&
+        process.env.FIREBASE_PRIVATE_KEY
+      ) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+          }),
+        });
+        this.logger.log("Firebase initialized with environment variables.");
+      } else {
+        this.logger.warn(
+          "No Firebase credentials found. Push notifications will be mocked."
+        );
+        this.fcmInitialized = false;
+        return;
       }
 
       this.fcm = admin;
       this.fcmInitialized = true;
       this.logger.log("Firebase Admin SDK initialized successfully");
     } catch (error) {
-      this.logger.warn(
+      this.logger.error(
         `Firebase initialization failed: ${error.message}. Using mock provider for push notifications.`,
+        error
       );
       this.fcmInitialized = false;
     }

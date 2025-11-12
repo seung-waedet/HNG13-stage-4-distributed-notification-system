@@ -20,7 +20,11 @@ export class PushNotificationService {
   async sendPushNotification(data: any): Promise<any> {
     try {
       // 1. Get user data (device token, preferences)
-      const user = await this.userService.getUser(data.user_id);
+      const user = await this.retryService.executeWithRetry(
+        () => this.userService.getUser(data.user_id),
+        3, // maxRetries
+        500, // baseDelay in ms
+      );
 
       // Check if user has opted out of push notifications
       if (!user.preferences?.push) {
@@ -28,8 +32,10 @@ export class PushNotificationService {
       }
 
       // 2. Get template content
-      const template = await this.templateService.getTemplate(
-        data.template_code,
+      const template = await this.retryService.executeWithRetry(
+        () => this.templateService.getTemplate(data.template_code),
+        3,
+        500,
       );
 
       // 3. Process template with variables
@@ -75,7 +81,7 @@ export class PushNotificationService {
     variables: Record<string, any>,
   ): string {
     // Replace template placeholders with actual values
-    let content = template.content;
+    let content = template.body;
     Object.entries(variables).forEach(([key, value]) => {
       content = content.replace(new RegExp(`{{${key}}}`, "g"), value);
     });
