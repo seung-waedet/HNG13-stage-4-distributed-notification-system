@@ -18,7 +18,7 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
       USER_DB_HOST: ${USER_DB_HOST:-postgres}
       USER_DB_PORT: ${USER_DB_PORT:-5432}
-      USER_DB_NAME: ${USER_DB_NAME:-users_db}
+      USER_DB_NAME: ${USER_DB_NAME:-notification_db}
       USER_DB_USER: ${USER_DB_USER:-admin}
       USER_DB_PASS: ${USER_DB_PASS:-admin}
       REDIS_HOST: ${REDIS_HOST:-redis}
@@ -36,7 +36,7 @@ services:
     environment:
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-users_db}
+      DB_NAME: ${DB_NAME:-notification_db}
       DB_USER: ${DB_USER:-admin}
       DB_PASS: ${DB_PASS:-admin}
       REDIS_HOST: ${REDIS_HOST:-redis}
@@ -49,11 +49,18 @@ services:
   # Email Service
   # -------------------------
   email-service:
-    build: ./email-service
+    build: ./email-service    
+    ports:
+      - "8003:8003"
     env_file:
       - ./email-service/.env
     environment:
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      DB_NAME: ${DB_NAME:-notification_db}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASS: ${DB_PASS:-admin}
     depends_on:
       - rabbitmq
 
@@ -61,11 +68,18 @@ services:
   # Push Service
   # -------------------------
   push-service:
-    build: ./push-service
+    build: ./push-service    
+    ports:
+      - "8004:8004"
     env_file:
       - ./push-service/.env
     environment:
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}      
+      DB_NAME: ${DB_NAME:-notification_db}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:-admin}
+      DB_PASS: ${DB_PASS:-admin}
     depends_on:
       - rabbitmq
 
@@ -81,7 +95,7 @@ services:
     environment:
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-template_service_db}
+      DB_NAME: ${DB_NAME:-template_db}
       DB_USER: ${DB_USER:-admin}
       DB_PASS: ${DB_PASS:-admin}
     depends_on:
@@ -107,7 +121,7 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: users_db
+      POSTGRES_DB: notification_db
     ports:
       - "5432:5432"
     volumes:
