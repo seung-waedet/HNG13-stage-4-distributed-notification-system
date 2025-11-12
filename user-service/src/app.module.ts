@@ -23,6 +23,10 @@ import { HealthModule } from './health/health.module';
         database: configService.get<string>('DB_DATABASE'),
         entities: [User],
         synchronize: true, // Should be false in production
+        ssl: configService.get<string>('DB_SSL_ENABLED') === 'true' ? {
+          rejectUnauthorized: true, // Reject connections not authorized by the CA
+          ca: configService.get<string>('DB_CA_CERT'),
+        } : false,
       }),
       inject: [ConfigService],
     }),

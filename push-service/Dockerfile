@@ -30,7 +30,7 @@ RUN npm ci --omit=dev
 COPY --from=builder /usr/src/app/dist ./dist
 
 # Expose the port the app runs on
-EXPOSE 3001
+EXPOSE 8004
 
 # Command to run the application
 CMD ["node", "dist/push-service/src/main"]

@@ -11,23 +11,23 @@ export async function setupRabbitMQ() {
     // Create the exchange
     const exchange = 'notifications.direct';
     await channel.assertExchange(exchange, 'direct', { durable: true });
-    logger.log(`✅ Exchange "${exchange}" created/verified`);
+    logger.log(`Exchange "${exchange}" created/verified`);
 
     // Create queues
     const queues = ['email.queue', 'push.queue', 'failed.queue'];
     for (const queue of queues) {
       await channel.assertQueue(queue, { durable: true });
-      logger.log(`✅ Queue "${queue}" created/verified`);
+      logger.log(`Queue "${queue}" created/verified`);
     }
 
     // Bind queues to exchange with routing keys
     await channel.bindQueue('email.queue', exchange, 'email');
     await channel.bindQueue('push.queue', exchange, 'push');
-    logger.log(`✅ Queue bindings created`);
+    logger.log(`Queue bindings created`);
 
     await channel.close();
     await connection.close();
-    logger.log(`✅ RabbitMQ setup completed successfully`);
+    logger.log(`RabbitMQ setup completed successfully`);
   } catch (error) {
     logger.error(`❌ Failed to setup RabbitMQ: ${error.message}`, error.stack);
     throw error;

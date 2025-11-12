@@ -1,6 +1,22 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpCode, HttpStatus, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  HttpCode,
+  HttpStatus,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto, UpdateUserPreferencesDto } from './dto/user.dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UpdateUserPreferencesDto,
+} from './dto/user.dto';
 import { User } from './user.entity';
 
 @Controller('api/v1/users')
@@ -28,13 +44,19 @@ export class UserController {
 
   @Put(':id')
   @HttpCode(HttpStatus.OK)
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<User> {
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ): Promise<User> {
     return this.userService.update(id, updateUserDto);
   }
 
   @Put(':id/preferences')
   @HttpCode(HttpStatus.OK)
-  async updatePreferences(@Param('id') id: string, @Body() updatePreferencesDto: UpdateUserPreferencesDto): Promise<User> {
+  async updatePreferences(
+    @Param('id') id: string,
+    @Body() updatePreferencesDto: UpdateUserPreferencesDto,
+  ): Promise<User> {
     return this.userService.updatePreferences(id, updatePreferencesDto);
   }
 

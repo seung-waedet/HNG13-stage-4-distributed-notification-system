@@ -13,12 +13,12 @@ export class NotificationsService {
     private readonly publisher: RabbitMQPublisherService,
   ) {
     // ClientProxy will connect automatically when first used
-    this.logger.log('📡 NotificationsService initialized with RabbitMQ client');
+    this.logger.log('NotificationsService initialized with RabbitMQ client');
   }
 
   async processNotification(dto: NotificationRequestDto): Promise<ApiResponse> {
-    this.logger.log(`📨 Received notification request: ${JSON.stringify(dto)}`);
-    
+    this.logger.log(`Received notification request: ${JSON.stringify(dto)}`);
+
     try {
       // Prepare message data
       const messageData = {
@@ -36,14 +36,14 @@ export class NotificationsService {
 
       // Pattern based on notification type
       const pattern = dto.notification_type; // 'email' or 'push'
-      
-      this.logger.log(`🚀 Publishing message with routing key: "${pattern}"`);
-      this.logger.log(`📦 Message Data: ${JSON.stringify(messageData)}`);
+
+      this.logger.log(`Publishing message with routing key: "${pattern}"`);
+      this.logger.log(`Message Data: ${JSON.stringify(messageData)}`);
 
       // Publish directly to the configured direct exchange to ensure delivery
       await this.publisher.publish(pattern, messageData);
-      
-      this.logger.log(`✅ Message published to exchange "notifications.direct" with key "${pattern}"`);
+
+      this.logger.log(`Message published to exchange "notifications.direct" with key "${pattern}"`);
 
       return {
         success: true,

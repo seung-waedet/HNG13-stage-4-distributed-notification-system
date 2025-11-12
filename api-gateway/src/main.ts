@@ -14,7 +14,7 @@ async function bootstrap() {
   try {
     await setupRabbitMQ();
   } catch (error) {
-    logger.warn('⚠️ RabbitMQ setup failed, continuing anyway...');
+    logger.warn('RabbitMQ setup failed');
   }
 
   const app = await NestFactory.create(AppModule);
@@ -53,7 +53,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  logger.log(`🚀 API Gateway running on port ${port}`);
-  logger.log(`📚 Swagger docs available at http://localhost:${port}/api`);
+  logger.log(`API Gateway running on port ${port}`);
+  logger.log(`Swagger docs available at http://localhost:${port}/api`);
 }
 bootstrap();

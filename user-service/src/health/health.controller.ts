@@ -12,7 +12,7 @@ export class HealthController {
   @HealthCheck()
   check() {
     return this.health.check([
-      () => this.db.pingDb(),
+      () => this.db.pingCheck('database'),
     ]);
   }
 }
