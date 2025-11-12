@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/EmailService/" />
+  <Folder Name="/EmailService/src/">
+    <Project Path="src/EmailService/EmailService.csproj" />
+  </Folder>
+</Solution>
