@@ -1,0 +1,14 @@
+{
+  "welcome_email": {
+    "subject": "Welcome to Our Platform!",
+    "body": "Hi {{name}},\n\nThanks for signing up. We’re glad to have you onboard!"
+  },
+  "password_reset": {
+    "subject": "Reset Your Password",
+    "body": "Hi {{name}},\n\nClick here to reset your password: {{reset_link}}"
+  },
+  "account_deactivated": {
+    "subject": "Your Account Has Been Deactivated",
+    "body": "Hi {{name}},\n\nWe noticed you deactivated your account. We hope to see you back soon."
+  }
+}
