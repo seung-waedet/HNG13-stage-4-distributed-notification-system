@@ -32,13 +32,15 @@ services:
     ports:
       - "8001:8081"
     env_file:
-      - ./user-service/.env.example
+      - ./user-service/.env
     environment:
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-your_password_here}
       DB_DATABASE: ${DB_DATABASE:-notification_system}
+      DB_CA_CERT: ${DB_CA_CERT:-your_db_cert}
+      DB_SSL_ENABLED: ${DB_SSL_ENABLED:-true}
       PORT: ${PORT:-8081}
     depends_on:
       - postgres
