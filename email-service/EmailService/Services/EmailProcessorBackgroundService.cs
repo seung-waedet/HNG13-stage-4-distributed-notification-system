@@ -21,7 +21,8 @@ public class EmailProcessorBackgroundService(RabbitMqSubscriber mq, StatusStore 
                     return;
                 }
 
-                var user = await Get<UserDto>($"{cfg["USER_SERVICE_URL"]}/users/{msg.user_id}");
+                // var user = await Get<UserDto>($"{cfg["USER_SERVICE_URL"]}/users/{msg.user_id}");
+                var user = msg.user;
                 var template = await Get<TemplateDto>($"{cfg["TEMPLATE_SERVICE_URL"]}/templates/{msg.template_code}");
 
                 if (user == null || template == null || !user.preferences?["email"] == true)
@@ -35,7 +36,7 @@ public class EmailProcessorBackgroundService(RabbitMqSubscriber mq, StatusStore 
                 var body = Render(template.body, msg.variables);
 
                 await sender.SendAsync(user.email, subject, body, ct);
-                await store.MarkProcessedAsync(msg.request_id);
+                await store.MarkProcessedAsync(msg.notification_id, msg.request_id);
             }
             catch (Exception ex)
             {
@@ -44,7 +45,7 @@ public class EmailProcessorBackgroundService(RabbitMqSubscriber mq, StatusStore 
                 if (attempt > 5)
                 {
                     mq.PublishToFailed(ea.Body.ToArray());
-                    await store.MarkProcessedAsync(msg.request_id, "failed", attempt, ex.Message);
+                    await store.MarkProcessedAsync(msg.notification_id, msg.request_id, "failed", attempt, ex.Message);
                 }
                 else
                 {
