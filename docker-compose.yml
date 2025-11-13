@@ -54,7 +54,7 @@ services:
       context: ./template-service
       dockerfile: Dockerfile
     ports:
-      - "8002:8002" 
+      - "8002:8002"
     depends_on:
       - postgres
     networks:
@@ -70,7 +70,7 @@ services:
     ports:
       - "8003:8080"
     env_file:
-      - ./email-service/.env.example
+      - ./email-service/EmailService/.env.example
     environment:
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
