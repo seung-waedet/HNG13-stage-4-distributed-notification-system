@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { lastValueFrom } from "rxjs";
 import { HttpService } from "@nestjs/axios";
-import { NotificationMessage } from "../../../shared-contracts/types/notification.types";
+
 import { AxiosError } from "axios";
 
 @Injectable()
