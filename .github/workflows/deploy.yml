@@ -25,7 +25,7 @@ jobs:
 
         uses: docker/setup-buildx-action@v2
       - name: Build Docker Images
-        run: docker-compose -f docker-compose.yml build
+        run: docker compose -f docker-compose.yml build
 
       - name: Deploy to server (placeholder)
         run: echo "This is where we would deploy to our production server via SSH or other method"
