@@ -12,10 +12,10 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["src/EmailService/EmailService.csproj", "src/EmailService/"]
-RUN dotnet restore "./src/EmailService/EmailService.csproj"
+COPY ["EmailService/EmailService.csproj", "EmailService/"]
+RUN dotnet restore "./EmailService/EmailService.csproj"
 COPY . .
-WORKDIR "/src/src/EmailService"
+WORKDIR "EmailService"
 RUN dotnet build "./EmailService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage

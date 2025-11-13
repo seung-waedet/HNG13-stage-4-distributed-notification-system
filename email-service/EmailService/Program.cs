@@ -2,12 +2,14 @@ using EmailService.Services;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using StackExchange.Redis;
+using System.Net;
+using System.Text;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
     .CreateLogger();
 
-Host.CreateDefaultBuilder(args)
+var host = Host.CreateDefaultBuilder(args)
     .UseSerilog()
     .ConfigureServices((hostContext, services) =>
     {
@@ -26,5 +28,27 @@ Host.CreateDefaultBuilder(args)
         // Background worker
         services.AddHostedService<EmailProcessorBackgroundService>();
     })
-    .Build()
-    .Run();
+    .Build();
+
+// --- Simple Health Endpoint (No ASP.NET Core Required) ---
+_ = Task.Run(async () =>
+{
+    var listener = new HttpListener();
+    listener.Prefixes.Add("http://0.0.0.0:8080/health/");
+    listener.Start();
+
+    Log.Information("Health endpoint listening on http://0.0.0.0:8080/health");
+
+    while (true)
+    {
+        var context = await listener.GetContextAsync();
+        var response = context.Response;
+        var buffer = Encoding.UTF8.GetBytes("{\"status\":\"healthy\"}");
+        response.ContentType = "application/json";
+        response.ContentLength64 = buffer.Length;
+        await response.OutputStream.WriteAsync(buffer);
+        response.Close();
+    }
+});
+
+await host.RunAsync();
