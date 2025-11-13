@@ -2,7 +2,7 @@ import { Controller, Post, Body, HttpCode, HttpStatus, UsePipes, ValidationPipe 
 import { NotificationsService } from './notifications.service';
 import { NotificationRequestDto } from './dto/create-notification.dto';
 import { ApiResponse as ApiSwaggerResponse } from '@nestjs/swagger';
-import { ApiResponse } from '../../../shared-contracts/types/response.types';
+import { ApiResponse } from '../types/response.types';
 
 @Controller('api/v1')
 export class NotificationsController {

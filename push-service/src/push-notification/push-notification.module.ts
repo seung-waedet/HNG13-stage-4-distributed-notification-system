@@ -4,7 +4,6 @@ import { HttpModule } from "@nestjs/axios";
 import { PushNotificationProcessor } from "./push-notification.processor";
 import { PushNotificationService } from "./push-notification.service";
 import { UserService } from "./user.service";
-import { TemplateService } from "./template.service";
 import { PushClientProvider } from "./push-client.provider";
 import { RetryService } from "./retry.service";
 import { StatusUpdateService } from "./status-update.service";
@@ -19,7 +18,6 @@ import { StatusPublisherService } from "./status-publisher.service";
   providers: [
     PushNotificationService,
     UserService,
-    TemplateService,
     PushClientProvider,
     RetryService,
     StatusUpdateService,
