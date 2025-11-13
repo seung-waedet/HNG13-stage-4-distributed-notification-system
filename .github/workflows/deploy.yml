@@ -1,0 +1,31 @@
+
+name: CD - Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # same secrets for deployment
+      USER_DB_USER: ${{ secrets.USER_DB_USER }}
+      USER_DB_PASS: ${{ secrets.USER_DB_PASS }}
+      USER_DB_NAME: ${{ secrets.USER_DB_NAME }}
+      TEMPLATE_DB_NAME: ${{ secrets.TEMPLATE_DB_NAME }}
+      RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+      REDIS_HOST: ${{ secrets.REDIS_HOST }}
+      REDIS_PORT: ${{ secrets.REDIS_PORT }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+
+        uses: docker/setup-buildx-action@v2
+      - name: Build Docker Images
+        run: docker-compose -f docker-compose.yml build
+
+      - name: Deploy to server (placeholder)
+        run: echo "This is where we would deploy to our production server via SSH or other method"
