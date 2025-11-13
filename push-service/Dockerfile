@@ -33,4 +33,4 @@ COPY --from=builder /usr/src/app/dist ./dist
 EXPOSE 8004
 
 # Command to run the application
-CMD ["node", "dist/push-service/src/main"]
+CMD ["node", "dist/main.js"]

@@ -33,13 +33,15 @@ services:
       - "8001:8081"
     env_file:
       - ./user-service/.env.example
-    environment:
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-your_password_here}
-      DB_DATABASE: ${DB_DATABASE:-notification_system}
-      PORT: ${PORT:-8081}
+    # environment:
+    #   DB_HOST: ${DB_HOST:-postgres}
+    #   DB_PORT: ${DB_PORT:-5432}
+    #   DB_USERNAME: ${DB_USERNAME:-postgres}
+    #   DB_PASSWORD: ${DB_PASSWORD:-your_password_here}
+    #   DB_DATABASE: ${DB_DATABASE:-notification_system}
+    #   DB_CA_CERT: ${DB_CA_CERT:-your_db_cert}
+    #   DB_SSL_ENABLED: ${DB_SSL_ENABLED:-true}
+    #   PORT: ${PORT:-8081}
     depends_on:
       - postgres
       - redis
@@ -54,7 +56,7 @@ services:
       context: ./template-service
       dockerfile: Dockerfile
     ports:
-      - "8002:8002" 
+      - "8002:8002"
     depends_on:
       - postgres
     networks:
@@ -70,7 +72,7 @@ services:
     ports:
       - "8003:8080"
     env_file:
-      - ./email-service/.env.example
+      - ./email-service/EmailService/.env.example
     environment:
       RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
