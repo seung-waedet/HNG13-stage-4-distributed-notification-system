@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { NotificationRequestDto } from './dto/create-notification.dto';
-import { ApiResponse } from '../../../shared-contracts/types/response.types';
+import { ApiResponse } from '../types/response.types';
 import { RabbitMQPublisherService } from '../rabbitmq/publisher.service';
 import { UserService } from '../services/user.service';
 import { TemplateService } from '../services/template.service';
