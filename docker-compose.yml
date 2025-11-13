@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   # -------------------------
@@ -8,21 +8,21 @@ services:
     build: ./api-gateway
     ports:
       - "8000:8000"
+    env_file:
+      - ./api-gateway/.env.example
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:8081}
+      TEMPLATE_SERVICE_URL: ${TEMPLATE_SERVICE_URL:-http://template-service:8082}
+      PORT: ${PORT:-8000}
     depends_on:
       - rabbitmq
       - user-service
-    env_file:
-      - ./api-gateway/.env
-    environment:
-      # fallback values for local dev if .env is missing
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
-      USER_DB_HOST: ${USER_DB_HOST:-postgres}
-      USER_DB_PORT: ${USER_DB_PORT:-5432}
-      USER_DB_NAME: ${USER_DB_NAME:-users_db}
-      USER_DB_USER: ${USER_DB_USER:-admin}
-      USER_DB_PASS: ${USER_DB_PASS:-admin}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      - template-service
+    networks:
+      - app-network
 
   # -------------------------
   # User Service
@@ -30,74 +30,120 @@ services:
   user-service:
     build: ./user-service
     ports:
-      - "8001:8001"
+      - "8001:8081"
     env_file:
-      - ./user-service/.env
+      - ./user-service/.env.example
     environment:
       DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-users_db}
-      DB_USER: ${DB_USER:-admin}
-      DB_PASS: ${DB_PASS:-admin}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-your_password_here}
+      DB_DATABASE: ${DB_DATABASE:-notification_system}
+      PORT: ${PORT:-8081}
     depends_on:
       - postgres
       - redis
+    networks:
+      - app-network
+
+  # -------------------------
+  # Template Service
+  # -------------------------
+  template-service:
+    build:
+      context: ./template-service
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002" 
+    depends_on:
+      - postgres
+    networks:
+      - app-network
 
   # -------------------------
   # Email Service
   # -------------------------
   email-service:
-    build: ./email-service
+    build:
+      context: ./email-service
+      dockerfile: EmailService/Dockerfile
+    ports:
+      - "8003:8080"
     env_file:
-      - ./email-service/.env
+      - ./email-service/.env.example
     environment:
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-notifications.direct}
+      RABBITMQ_EMAIL_QUEUE: ${RABBITMQ_EMAIL_QUEUE:-email.queue}
+      RABBITMQ_FAILED_QUEUE: ${RABBITMQ_FAILED_QUEUE:-failed.queue}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:8081}
+      TEMPLATE_SERVICE_URL: ${TEMPLATE_SERVICE_URL:-http://template-service:8082}
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@test.com}
+      PORT: ${PORT:-8080}
     depends_on:
       - rabbitmq
+      - redis
+      # - mailhog
+    restart: unless-stopped
+    networks:
+      - app-network
 
   # -------------------------
   # Push Service
   # -------------------------
   push-service:
     build: ./push-service
+    ports:
+      - "8004:8004"
     env_file:
-      - ./push-service/.env
+      - ./push-service/.env.example
     environment:
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
+      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:8081}
+      TEMPLATE_SERVICE_URL: ${TEMPLATE_SERVICE_URL:-http://template-service:8082}
+      PORT: ${PORT:-8004}
     depends_on:
       - rabbitmq
-
-  # -------------------------
-  # Template Service
-  # -------------------------
-  template-service:
-    build: ./template-service
-    ports:
-      - "8002:8002"
-    env_file:
-      - ./template-service/.env
-    environment:
-      DB_HOST: ${DB_HOST:-postgres}
-      DB_PORT: ${DB_PORT:-5432}
-      DB_NAME: ${DB_NAME:-template_service_db}
-      DB_USER: ${DB_USER:-admin}
-      DB_PASS: ${DB_PASS:-admin}
-    depends_on:
-      - postgres
+      - redis
+    networks:
+      - app-network
 
   # -------------------------
   # RabbitMQ
   # -------------------------
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
     ports:
       - "5672:5672"
       - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # -------------------------
+  # Redis
+  # -------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - app-network
 
   # -------------------------
   # PostgreSQL
@@ -105,24 +151,22 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: users_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_password_here}
+      POSTGRES_DB: ${POSTGRES_DB:-notification_db}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
 
-  # -------------------------
-  # Redis
-  # -------------------------
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
-
-# -------------------------
-# Volumes
-# -------------------------
 volumes:
   pgdata:
+  rabbitmq_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
