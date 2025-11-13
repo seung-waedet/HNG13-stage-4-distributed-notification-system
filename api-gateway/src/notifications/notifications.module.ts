@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { HttpModule } from '@nestjs/axios';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { RabbitMQPublisherService } from '../rabbitmq/publisher.service';
+import { UserService } from '../services/user.service';
+import { TemplateService } from '../services/template.service';
 
 @Module({
   imports: [
+    HttpModule,
     ClientsModule.register([
       {
         name: 'RABBITMQ_SERVICE',
@@ -33,7 +37,12 @@ import { RabbitMQPublisherService } from '../rabbitmq/publisher.service';
     ]),
   ],
   controllers: [NotificationsController],
-  providers: [NotificationsService, RabbitMQPublisherService],
+  providers: [
+    NotificationsService,
+    RabbitMQPublisherService,
+    UserService,
+    TemplateService,
+  ],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}

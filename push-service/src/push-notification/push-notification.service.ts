@@ -1,6 +1,5 @@
-import { Injectable, Logger, Inject } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { TemplateService } from "./template.service";
 import { PushClientProvider } from "./push-client.provider";
 import { RetryService } from "./retry.service";
 import { CircuitBreakerService } from "./circuit-breaker.service";
@@ -11,7 +10,6 @@ export class PushNotificationService {
 
   constructor(
     private readonly userService: UserService,
-    private readonly templateService: TemplateService,
     private readonly pushClient: PushClientProvider,
     private readonly retryService: RetryService,
     private readonly circuitBreakerService: CircuitBreakerService,
@@ -21,7 +19,7 @@ export class PushNotificationService {
     try {
       // 1. Get user data (device token, preferences)
       const user = await this.retryService.executeWithRetry(
-        () => this.userService.getUser(data.user_id),
+        () => this.userService.getUser(data.user.id),
         3, // maxRetries
         500, // baseDelay in ms
       );
@@ -31,12 +29,8 @@ export class PushNotificationService {
         throw new Error("User has disabled push notifications");
       }
 
-      // 2. Get template content
-      const template = await this.retryService.executeWithRetry(
-        () => this.templateService.getTemplate(data.template_code),
-        3,
-        500,
-      );
+      // 2. Get template from the message
+      const template = data.template;
 
       // 3. Process template with variables
       const processedContent = this.processTemplate(template, data.variables);

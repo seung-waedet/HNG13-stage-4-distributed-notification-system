@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { NotificationMessage } from '../../../shared-contracts/types/notification.types';
+import { NotificationMessage } from '../types/notification.types';
 
 @Injectable()
 export class RedisCacheService {
