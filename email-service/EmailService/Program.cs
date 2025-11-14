@@ -33,7 +33,7 @@ var host = Host.CreateDefaultBuilder(args)
 // --- Simple Health Endpoint (No ASP.NET Core Required) ---
 _ = Task.Run(async () =>
 {
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8003";
     var listener = new HttpListener();
     listener.Prefixes.Add($"http://+:{port}/health/");
     listener.Start();

@@ -35,7 +35,10 @@ export class NotificationsService {
         notification_id: notificationId,
         user: user,
         template: template,
-        variables: dto.variables,
+        variables: {
+          name: user.name,
+          email: user.email,
+        },
         metadata: dto.metadata || {},
       };
 

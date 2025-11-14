@@ -40,9 +40,16 @@ public class RabbitMqSubscriber : IDisposable
 
         log.LogInformation("Declaring exchange '{Exchange}' and queues '{Queue}', '{FailedQueue}'", _exchange, _queue, _failedQueue);
         _channel.ExchangeDeclare(_exchange, "direct", durable: true);
+        _log.LogInformation("RabbitMQ Exchange '{Exchange}' declared as direct.", _exchange);
+
         _channel.QueueDeclare(_queue, durable: true, exclusive: false, autoDelete: false);
+        _log.LogInformation("RabbitMQ Queue '{Queue}' declared.", _queue);
+
         _channel.QueueDeclare(_failedQueue, durable: true, exclusive: false, autoDelete: false);
+        _log.LogInformation("RabbitMQ Failed Queue '{FailedQueue}' declared.", _failedQueue);
+
         _channel.QueueBind(_queue, _exchange, "email");
+        _log.LogInformation("RabbitMQ Queue '{Queue}' bound to Exchange '{Exchange}' with routing key 'email'.", _queue, _exchange);
     }
 
     public void StartConsuming(Func<NotificationMessage, BasicDeliverEventArgs, Task> handler)

@@ -1,93 +1,67 @@
-version: "3.9"
-
-services:
-  # -------------------------
-  # API Gateway
-  # -------------------------
-  api-gateway:
-    build: ./api-gateway
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./api-gateway/.env.example
-    environment:
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:8081}
-      TEMPLATE_SERVICE_URL: ${TEMPLATE_SERVICE_URL:-http://template-service:8082}
-      PORT: ${PORT:-8000}
-    depends_on:
-      - rabbitmq
-      - user-service
-      - template-service
-    networks:
-      - app-network
-
-  # -------------------------
-  # User Service
-  # -------------------------
   user-service:
     build: ./user-service
     ports:
-      - "8001:8081"
+      - "8001:8001"
     env_file:
-      - ./user-service/.env.example
       - ./user-service/.env
-    # environment:
-    #   DB_HOST: ${DB_HOST:-postgres}
-    #   DB_PORT: ${DB_PORT:-5432}
-    #   DB_USERNAME: ${DB_USERNAME:-postgres}
-    #   DB_PASSWORD: ${DB_PASSWORD:-your_password_here}
-    #   DB_DATABASE: ${DB_DATABASE:-notification_system}
-    #   DB_CA_CERT: ${DB_CA_CERT:-your_db_cert}
-    #   DB_SSL_ENABLED: ${DB_SSL_ENABLED:-true}
-    #   PORT: ${PORT:-8081}
+    environment:
+      PORT: 8001
+      REDIS_HOST: redis
     depends_on:
-      - postgres
-      - redis
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
-  # -------------------------
-  # Template Service
-  # -------------------------
+  # =========================
+  # TEMPLATE SERVICE
+  # =========================
   template-service:
     build:
       context: ./template-service
       dockerfile: Dockerfile
     ports:
       - "8002:8002"
-    depends_on:
-      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
-  # -------------------------
-  # Email Service
-  # -------------------------
+  # =========================
+  # EMAIL SERVICE
+  # =========================
   email-service:
     build:
       context: ./email-service
       dockerfile: EmailService/Dockerfile
     ports:
-      - "8003:8080"
+      - "8003:8003"
     env_file:
       - ./email-service/EmailService/.env.example
     environment:
-      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
-      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
-      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-notifications.direct}
-      RABBITMQ_EMAIL_QUEUE: ${RABBITMQ_EMAIL_QUEUE:-email.queue}
-      RABBITMQ_FAILED_QUEUE: ${RABBITMQ_FAILED_QUEUE:-failed.queue}
-      REDIS_HOST: ${REDIS_HOST:-redis}
-      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:8081}
-      TEMPLATE_SERVICE_URL: ${TEMPLATE_SERVICE_URL:-http://template-service:8082}
-      SMTP_HOST: ${SMTP_HOST:-mailhog}
-      SMTP_PORT: ${SMTP_PORT:-1025}
-      SMTP_FROM: ${SMTP_FROM:-no-reply@test.com}
-      PORT: ${PORT:-8080}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+      RABBITMQ_EXCHANGE: notifications.direct
+      RABBITMQ_EMAIL_QUEUE: email.queue
+      RABBITMQ_FAILED_QUEUE: failed.queue
+      REDIS_HOST: redis
+      USER_SERVICE_URL: http://user-service:8001
+      TEMPLATE_SERVICE_URL: http://template-service:8002
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_FROM: no-reply@test.com
+      PORT: 8003
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -96,56 +70,69 @@ services:
       mailhog:
         condition: service_started
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
-  # -------------------------
-  # Push Service
-  # -------------------------
+  # =========================
+  # PUSH NOTIFICATION SERVICE
+  # =========================
   push-service:
     build: ./push-service
     ports:
       - "8004:8004"
     env_file:
-      - ./push-service/.env.example
+      - ./push-service/.env
     environment:
-      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://rabbitmq:5672}
-      USER_SERVICE_URL: ${USER_SERVICE_URL:-http://user-service:8081}
-      TEMPLATE_SERVICE_URL: ${TEMPLATE_SERVICE_URL:-http://template-service:8082}
-      PORT: ${PORT:-8004}
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      USER_SERVICE_URL: http://user-service:8001
+      TEMPLATE_SERVICE_URL: http://template-service:8002
+      PORT: 8004
     depends_on:
-      - rabbitmq
-      - redis
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
-  # -------------------------
-  # RabbitMQ
-  # -------------------------
+  # =========================
+  # RABBITMQ
+  # =========================
   rabbitmq:
     image: rabbitmq:3.11-management
     container_name: rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "5673:5672"
-      - "15673:15672"
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 5s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
 
-  # -------------------------
-  # Redis
-  # -------------------------
+  # =========================
+  # REDIS
+  # =========================
   redis:
     image: redis:7-alpine
     container_name: redis
@@ -158,24 +145,7 @@ services:
       - app-network
 
   # -------------------------
-  # PostgreSQL
-  # -------------------------
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_password_here}
-      POSTGRES_DB: ${POSTGRES_DB:-notification_db}
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - app-network
-
-  # -------------------------
-  # MailGun
+  # MailHog
   # -------------------------
   mailhog:
     image: mailhog/mailhog
@@ -187,11 +157,16 @@ services:
     networks:
       - app-network
 
+# =========================
+# VOLUMES
+# =========================
 volumes:
-  pgdata:
   rabbitmq_data:
   redis_data:
 
+# =========================
+# NETWORKS
+# =========================
 networks:
   app-network:
     driver: bridge
