@@ -89,9 +89,12 @@ services:
       SMTP_FROM: ${SMTP_FROM:-no-reply@test.com}
       PORT: ${PORT:-8080}
     depends_on:
-      - rabbitmq
-      - redis
-      # - mailhog
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mailhog:
+        condition: service_started
     restart: unless-stopped
     networks:
       - app-network
@@ -126,13 +129,19 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "5673:5672"
+      - "15673:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: unless-stopped
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
   # -------------------------
   # Redis
@@ -161,6 +170,19 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # -------------------------
+  # MailGun
+  # -------------------------
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     restart: unless-stopped
     networks:
       - app-network

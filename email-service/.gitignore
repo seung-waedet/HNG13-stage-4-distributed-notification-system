@@ -66,6 +66,8 @@ artifacts/
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
+docker-compose.yml
+
 # StyleCop
 StyleCopReport.xml
 
