@@ -7,7 +7,8 @@ public class NotificationMessage
     public string notification_type { get; set; } = default!;
     // public Guid user_id { get; set; }
     public UserDto user { get; set; }
-    public string template_code { get; set; } = default!;
+    public TemplateDto template { get; set; }
+    //public string template_code { get; set; } = default!;
     public Dictionary<string, string>? variables { get; set; }
     public int priority { get; set; } = 1;
     public Dictionary<string, object>? metadata { get; set; }

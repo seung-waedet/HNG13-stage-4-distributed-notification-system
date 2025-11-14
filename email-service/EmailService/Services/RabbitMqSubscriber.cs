@@ -19,19 +19,26 @@ public class RabbitMqSubscriber : IDisposable
     {
         _cfg = cfg;
         _log = log;
+        var host = cfg["RABBITMQ_HOST"];
+        log.LogInformation("Connecting to RabbitMQ host {Host}", host);
         var factory = new ConnectionFactory
         {
-            HostName = cfg["RABBITMQ_HOST"],
+            ClientProvidedName = "Email Service",
+            HostName = host,
             UserName = cfg["RABBITMQ_USER"],
-            Password = cfg["RABBITMQ_PASS"]
+            Password = cfg["RABBITMQ_PASS"],
+            DispatchConsumersAsync = true,
+            RequestedHeartbeat = TimeSpan.FromSeconds(30)
         };
         _conn = factory.CreateConnection();
         _channel = _conn.CreateModel();
+        log.LogInformation("Successfully connected to RabbitMQ");
 
         _exchange = cfg["RABBITMQ_EXCHANGE"]!;
         _queue = cfg["RABBITMQ_EMAIL_QUEUE"]!;
         _failedQueue = cfg["RABBITMQ_FAILED_QUEUE"]!;
 
+        log.LogInformation("Declaring exchange '{Exchange}' and queues '{Queue}', '{FailedQueue}'", _exchange, _queue, _failedQueue);
         _channel.ExchangeDeclare(_exchange, "direct", durable: true);
         _channel.QueueDeclare(_queue, durable: true, exclusive: false, autoDelete: false);
         _channel.QueueDeclare(_failedQueue, durable: true, exclusive: false, autoDelete: false);
@@ -43,25 +50,46 @@ public class RabbitMqSubscriber : IDisposable
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.Received += async (s, ea) =>
         {
+            _log.LogInformation("Received message with delivery tag {DeliveryTag}", ea.DeliveryTag);
             var json = Encoding.UTF8.GetString(ea.Body.ToArray());
             var msg = JsonConvert.DeserializeObject<NotificationMessage>(json, SnakeCaseJsonSettings.Settings);
-            if (msg != null) await handler(msg, ea);
-            else _channel.BasicAck(ea.DeliveryTag, false);
+            if (msg != null)
+            {
+                await handler(msg, ea);
+            }
+            else
+            {
+                _log.LogWarning("Could not deserialize message with delivery tag {DeliveryTag}. Acknowledging to discard.", ea.DeliveryTag);
+                _channel.BasicAck(ea.DeliveryTag, false);
+            }
         };
         _channel.BasicConsume(_queue, false, consumer);
+        _log.LogInformation("Consumer started on queue '{Queue}'", _queue);
     }
 
-    public void PublishToFailed(byte[] body) =>
+    public void PublishToFailed(byte[] body)
+    {
+        _log.LogInformation("Publishing message to failed queue '{FailedQueue}'", _failedQueue);
         _channel.BasicPublish(_exchange, _failedQueue, body: body);
+    }
 
-    public void Publish(string routingKey, byte[] body) =>
+    public void Publish(string routingKey, byte[] body)
+    {
+        _log.LogInformation("Republishing message with routing key '{RoutingKey}' to exchange '{Exchange}'", routingKey, _exchange);
         _channel.BasicPublish(_exchange, routingKey, body: body);
+    }
 
-    public void Ack(ulong deliveryTag, bool multiple = false) =>
+    public void Ack(ulong deliveryTag, bool multiple = false)
+    {
+        _log.LogInformation("Acknowledging message with delivery tag {DeliveryTag}", deliveryTag);
         _channel.BasicAck(deliveryTag, multiple);
+    }
 
-    public void Nack(ulong deliveryTag, bool requeue = true) =>
+    public void Nack(ulong deliveryTag, bool requeue = true)
+    {
+        _log.LogWarning("Nacking message with delivery tag {DeliveryTag}", deliveryTag);
         _channel.BasicNack(deliveryTag, false, requeue);
+    }
 
     public void Dispose()
     {
