@@ -11,6 +11,7 @@ public class EmailProcessorBackgroundService(RabbitMqSubscriber mq, StatusStore 
 {
     protected override Task ExecuteAsync(CancellationToken ct)
     {
+        log.LogInformation("EmailProcessorBackgroundService is starting to consume messages.");
         mq.StartConsuming(async (msg, ea) =>
         {
             log.LogInformation("Starting to process notification {NotificationId} (Request ID: {RequestId})", msg.notification_id, msg.request_id);

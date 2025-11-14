@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException
 import json
+
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI(title="Template Service")
 
@@ -12,14 +13,14 @@ def get_template(code: str):
     """
     # Load templates from file (you could later connect this to a DB)
     with open("templates.json", "r") as f:
-      templates = json.load(f)
+        templates = json.load(f)
     template = templates.get(code)
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
     return {
-        "success": True, 
-        "data": template, 
-        "message": "Template fetched successfully"
+        "success": True,
+        "data": template,
+        "message": "Template fetched successfully",
     }
 
 
@@ -29,6 +30,7 @@ def root():
     Root endpoint — simple welcome message.
     """
     return {"message": "Welcome to the Template Service"}
+
 
 @app.get("/health")
 def health_check():
@@ -40,4 +42,5 @@ def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)

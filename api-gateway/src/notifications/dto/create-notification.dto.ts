@@ -1,29 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsUUID, IsString, IsObject, IsOptional, IsNumber, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsEnum, IsUUID, IsString, IsObject, IsOptional, IsNumber } from 'class-validator';
 
 export enum NotificationType {
   email = 'email',
   push = 'push',
-}
-
-export class UserData {
-  @ApiProperty({ example: 'John Doe', description: 'User name' })
-  @IsString()
-  name: string;
-
-  @ApiProperty({ example: 'https://example.com', description: 'Link for the notification' })
-  @IsString()
-  link: string;
-
-  @ApiProperty({
-    example: { custom_field: 'custom_value' },
-    description: 'Additional metadata',
-    required: false
-  })
-  @IsOptional()
-  @IsObject()
-  meta?: Record<string, any>;
 }
 
 export class NotificationRequestDto {
@@ -47,13 +27,6 @@ export class NotificationRequestDto {
   })
   @IsString()
   template_code: string;
-
-  @ApiProperty({
-    description: 'Variables to populate in the template'
-  })
-  @ValidateNested()
-  @Type(() => UserData)
-  variables: UserData;
 
   @ApiProperty({
     example: 'req-123e4567-e89b-12d3-a456-426614174000',

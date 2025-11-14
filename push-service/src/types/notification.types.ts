@@ -1,7 +1,7 @@
 // Shared types for notification system
 
 export interface NotificationRequest {
-  notification_type: 'email' | 'push';
+  notification_type: "email" | "push";
   user_id: string; // UUID format
   template_code: string;
   variables: {
@@ -17,7 +17,7 @@ export interface NotificationRequest {
 export interface NotificationMessage {
   notification_id: string;
   user_id: string;
-  notification_type: 'email' | 'push';
+  notification_type: "email" | "push";
   template_code: string;
   variables: Record<string, any>;
   request_id: string;
@@ -48,7 +48,7 @@ export interface Template {
 
 export interface NotificationStatusUpdate {
   notification_id: string;
-  status: 'delivered' | 'pending' | 'failed';
+  status: "delivered" | "pending" | "failed";
   timestamp: string;
   error?: string;
 }
